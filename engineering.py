@@ -108,3 +108,91 @@ class Pipe:
             "friction_factor": friction_factor,
             "pressure_drop": pressure_drop,
         }
+
+class Wall:
+    """Represents a flat wall for steady-state conduction calculations."""
+
+    def __init__(self, thickness: float, area: float, thermal_conductivity: float):
+        """
+        Initialize a Wall.
+
+        Args:
+            thickness: Wall thickness in meters.
+            area: Cross-sectional area in m^2.
+            thermal_conductivity: Thermal conductivity of the wall material in W/(m.K).
+        """
+        if thickness <= 0 or area <= 0 or thermal_conductivity <= 0:
+            raise ValueError("Thickness, area, and thermal conductivity must be positive.")
+        self.thickness = thickness
+        self.area = area
+        self.thermal_conductivity = thermal_conductivity
+
+    def heat_transfer_rate(self, t_hot: float, t_cold: float) -> float:
+        """
+        Compute steady-state conduction heat transfer rate using Fourier's law.
+
+        Args:
+            t_hot: Hot-side surface temperature (deg C or K).
+            t_cold: Cold-side surface temperature (deg C or K, same scale as t_hot).
+
+        Returns:
+            Heat transfer rate in Watts.
+        """
+        if t_hot <= t_cold:
+            raise ValueError("t_hot must be greater than t_cold for heat to flow hot to cold.")
+        return (self.thermal_conductivity * self.area * (t_hot - t_cold)) / self.thickness
+
+
+class CoolingObject:
+    """Represents an object cooling toward ambient temperature (Newton's Law of Cooling)."""
+
+    def __init__(self, initial_temp: float, ambient_temp: float, cooling_constant: float):
+        """
+        Initialize a CoolingObject.
+
+        Args:
+            initial_temp: Starting temperature of the object (deg C).
+            ambient_temp: Ambient (surrounding) temperature (deg C).
+            cooling_constant: Cooling rate constant k, in 1/s.
+        """
+        if cooling_constant <= 0:
+            raise ValueError("Cooling constant must be positive.")
+        if initial_temp <= ambient_temp:
+            raise ValueError("Initial temperature must be greater than ambient temperature.")
+        self.initial_temp = initial_temp
+        self.ambient_temp = ambient_temp
+        self.cooling_constant = cooling_constant
+
+    def temperature_at(self, t: float) -> float:
+        """
+        Compute the object's temperature at time t.
+
+        Args:
+            t: Time in seconds (t >= 0).
+
+        Returns:
+            Temperature at time t (deg C).
+        """
+        if t < 0:
+            raise ValueError("Time must be non-negative.")
+        return self.ambient_temp + (self.initial_temp - self.ambient_temp) * math.exp(
+            -self.cooling_constant * t
+        )
+
+    def time_to_reach(self, target_temp: float) -> float:
+        """
+        Compute the time required to cool to a target temperature.
+
+        Args:
+            target_temp: Desired temperature (deg C). Must lie strictly between
+                ambient_temp and initial_temp.
+
+        Returns:
+            Time in seconds to reach target_temp.
+        """
+        if not (self.ambient_temp < target_temp < self.initial_temp):
+            raise ValueError(
+                "Target temperature must be strictly between ambient and initial temperature."
+            )
+        ratio = (target_temp - self.ambient_temp) / (self.initial_temp - self.ambient_temp)
+        return -math.log(ratio) / self.cooling_constant
