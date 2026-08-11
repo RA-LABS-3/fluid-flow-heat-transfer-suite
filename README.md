@@ -6,7 +6,7 @@ Built for PE 262 (Computer Programming for Petroleum Engineers), KNUST.
 
 ## Live App
 
-**[Launch the app](PLACEHOLDER_URL)** *(link added after deployment)*
+**[Launch the app](https://fluid-flow-heat-transfer-suite-tgnpszhtx2mzajsmrr8fhe.streamlit.app/)**
 
 ## Features
 
